@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bakery Shop</title>
+    <link rel="stylesheet" href="Style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <img src="/Image/clogo.jpg" class="img-fluid clogo" alt="">
+            <a class="navbar-brand fw-bold text-danger" style="font-size: 1.5rem; color: red;" href="#">CAKE-SHOP</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
+                aria-controls="offcanvasNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" style="margin-left: 50vw;" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link  fw-bold" style="color: red;" href="#">HOME</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link  fw-bold" style="color: red;" href="menu.html">PRODUCT</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link  fw-bold" style="color: red;" href="#About-us">ABOUT US</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link  fw-bold" style="color: red;" href="#Contact">CONTACT</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Offcanvas Menu for Smaller Screens -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title fw-bold text-danger" id="offcanvasNavbarLabel">Menu</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-bold" href="#">HOME</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-bold" href="menu.html">PRODUCT</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-bold" href="#About-us">ABOUT US</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-bold" href="#Conatct">CONTACT</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- <marquee direction="right">
+        Delivered Straight to Your Doorstep.
+    </marquee>
+    <br> -->
+    <div class="container mt-5 mb-5">
+        <div class="row align-items-center text-center text-lg-start">
+            <div class="col-lg-6">
+                <p class="text text-dark fw-bold mt-3">
+                    Experience the Warmth of Freshly Baked Goodness.
+                    <span>Breads, Cakes, and Pastries.</span>
+                </p>
+                <a class="btn btn-dark fw-bold" href="menu.html">Order Now</a>
+            </div>
+            <div class="col-lg-6 mt-5 mb-5">
+                <img class="img-fluid s1-img" src="/image/hero-img.avif" alt="image">
+            </div>
+        </div>
+    </div>
+    <br>
+    <hr>
+    <br>
+    <!-- About Section -->
+    <section id="About-us" class="mt-5 mb-5">
+        <h2 class="text-center fs-1 fw-bold mb-4">About Us</h2>
+        <div class="container mb-5">
+            <div class="row text-center text-lg-start">
+                <div class="col-lg-6">
+                    <h3 class="text-danger fs-2 fw-bold">Our Story</h3>
+                    <p class="text-secondary">
+                        Welcome to CAKE-SHOP, where we turn simple ingredients into delightful creations. Founded in
+                        2024 by Mohan Patil, our bakery has been a beloved part of the community, serving freshly baked
+                        bread, cakes, and pastries with a smile. <br> <br>
+                        Our passion for baking began with a family recipe passed down through generations, and today, we
+                        blend tradition with innovation to bring you the best in artisanal baked goods. Each product is
+                        made with care and the finest ingredients to ensure quality and taste in every bite.
+                    </p>
+                </div>
+                <div class="col-lg-6">
+                    <h3 class="text-danger fs-2 fw-bold">Our Mission</h3>
+                    <p class="text-secondary">
+                        At CAKE-SHOP, our mission is to provide our customers with exceptional baked goods and a warm,
+                        welcoming experience. We believe in using high-quality, locally sourced ingredients to create
+                        products that not only taste amazing but also bring joy to every occasion.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <hr>
+    <!-- contact section -->
+    <h2 class="text-center fs-1 fw-bold mb-4 mt-5">Contact</h2>
+    <div id="Contact" class="container about mt-5">
+        <div class="row align-items-left text-left text-lg-start">
+            <div class="col-lg-6">
+                <div class="contact-card">
+                    <p class="fw-bold"></p>
+                    <p><b>Shop Owner:</b> Mohan Gopal Patil</p>
+                    <p><b>Address:</b> Karve Nagar Pune (411052) India.</p>
+                    <p><b>Email: </b> patilmohan2307@gmail.com</p>
+                    <p><b>Mobile:</b> +91 9307982030</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="bg-body-tertiary text-center text-lg-start mt-5">
+        <div class="text-center p-3 text-light" style="background-color: rgb(16, 15, 15);">
+            © 2024 Copyright:
+            <a class=" text-light" href="#">CAKE-SHOP.com</a>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+        integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
+        integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

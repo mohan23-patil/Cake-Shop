@@ -1,0 +1,86 @@
+*{
+    padding: 0vw;
+    margin: 0vw;
+}
+.clogo{
+    width: 60px;
+    height: 30px;
+    margin-left: 5vw;
+}
+marquee{
+    font-family: cursive;
+    font-size: 2rem;
+}
+.s1-img {
+    width: 60%; 
+    max-width: 500px;
+    height: auto;
+    border-radius: 50%;
+}
+.text{
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 2rem;
+}
+span{
+    color: red;
+    font-weight: bold;
+}
+/* menu section */
+.flavor-links {
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: center;
+}
+.nav-link {
+    font-weight: bold;
+    text-decoration: none;
+    color: red;
+    padding: 10px 15px;
+    margin: 5px; 
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-link:hover {
+    color: red;
+    background-color: #4f5154;
+}
+
+.custom-carousel {
+    max-width: 600px; /* Adjust the width as needed */
+    margin: 0 auto;   /* Center the carousel horizontally */
+}
+.custom-carousel-img {
+    max-height: 400px; /* Adjust the height as needed */
+    object-fit: cover; /* Ensure the image covers the entire area without distortion */
+    width: 100%;       /* Ensure the image width is responsive */
+}
+
+.card {
+    border: none;
+    box-shadow: 0 6px 40px rgba(0, 0, 0, 0.1);
+}
+
+.card img {
+    height: 200px; /* Fixes image height */
+    object-fit: cover; /* Ensures the image covers the area */
+}
+
+
+@media (max-width: 767px) {
+    .s1-img {
+        max-width: 500px; 
+    }
+    .text{
+        font-size: 1.3rem;
+    }
+    .nav-link {
+        font-size: 14px; /* Adjust font size for smaller screens */
+    }
+    .card img {
+        height: 200px; /* Adjusts image height for small screens */
+    }
+    .custom-carousel-img {
+        max-height: 300px; /* Adjust the height for smaller screens */
+    }
+}
