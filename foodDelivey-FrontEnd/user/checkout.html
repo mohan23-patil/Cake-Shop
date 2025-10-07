@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout - Cake Shop</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+<style>
+  body { background: linear-gradient(135deg,#fff1eb,#ace0f9); min-height: 100vh; display: flex; flex-direction: column; }
+  .navbar-nav .nav-link:hover { font-size: 1.2rem; transition: font-size 0.3s ease; }
+  .card { border-radius: 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
+  .payment-option { border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.3s; }
+  .payment-option:hover { background: #f9f9f9; border-color: #28a745; }
+  .selected { border-color: #28a745; background: #e9ffe9; }
+  .footer-section { background: linear-gradient(135deg, #d5fefd, #fed6e3); color: black; text-align: center; padding: 20px 0; margin-top: auto; }
+  .modal-content.popup { border:none; border-radius:12px; color:white; text-align:center; padding:20px; }
+  .modal-content.success { background: #28a745; }
+  .modal-content.error { background: #dc3545; }
+  .modal-content.popup h5 { font-weight:700; margin:0; }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg" style="background:linear-gradient(135deg,#fff1eb,#ace0f9);">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold fs-3 text-danger">🎂 Cake Shop</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/userHome.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/viewAllCake.html"><i class="fa-solid fa-cake-candles"></i> Cakes</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/Cart.html"><i class="fa-solid fa-cart-shopping"></i> Cart</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold active" href="#"><i class="fa-solid fa-truck"></i> Orders</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/contact.html"><i class="fa-solid fa-envelope"></i> Contact</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/userDetails.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Checkout Container -->
+<div class="container my-4 pt-5">
+  <div class="row g-3">
+    <!-- Delivery & Summary -->
+    <div class="col-lg-8 col-md-12">
+      <div class="card p-3 mb-3">
+        <h5 class="fw-bold mb-3">Delivery Address</h5>
+        <form id="deliveryForm" class="row g-2">
+          <div class="col-md-6">
+            <input type="text" class="form-control" id="fullName" placeholder="Full Name" required>
+          </div>
+          <div class="col-md-6">
+            <input type="text" class="form-control" id="phone" placeholder="Phone Number" required>
+          </div>
+          <div class="col-12">
+            <textarea class="form-control" id="address" placeholder="Address" required></textarea>
+          </div>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="city" placeholder="City" required>
+          </div>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="state" placeholder="State" required>
+          </div>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="pincode" placeholder="Pincode" required>
+          </div>
+        </form>
+        <hr class="my-3">
+        <h5 class="fw-bold mb-2">Order Summary</h5>
+        <ul id="orderSummary" class="list-group mb-2"></ul>
+        <h5>Total: ₹<span id="totalAmount">0</span></h5>
+      </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="col-lg-4 col-md-12">
+      <div class="card p-3 mb-3">
+        <h5 class="fw-bold mb-3">Payment Options</h5>
+        <div class="payment-option" id="online" onclick="selectPayment('online')">💳 Pay Online (UPI / Card)</div>
+        <div class="payment-option" id="cod" onclick="selectPayment('cod')">🚚 Cash on Delivery</div>
+        <button class="btn btn-success w-100 mt-3" onclick="makePayment()">Pay & Place Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer-section text-dark">
+  <p class="fw-bold mb-0">© 2025 Cake Shop. All rights reserved.</p>
+</footer>
+
+<!-- Popup Modal -->
+<div class="modal fade" id="popupModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content popup">
+      <div class="modal-body">
+        <h5 id="popupMessage"></h5>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Razorpay SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+let selectedPayment = "";
+
+// Select payment option
+function selectPayment(method){
+  document.querySelectorAll(".payment-option").forEach(el => el.classList.remove("selected"));
+  document.getElementById(method).classList.add("selected");
+  selectedPayment = method;
+}
+
+// Show popup modal
+function showPopup(message, type="error"){
+  const popupEl = document.getElementById("popupModal");
+  const contentEl = popupEl.querySelector(".modal-content");
+  contentEl.classList.remove("success","error");
+  contentEl.classList.add(type);
+  document.getElementById("popupMessage").innerText = message;
+  const popup = new bootstrap.Modal(popupEl);
+  popup.show();
+  setTimeout(()=> popup.hide(), 3000);
+}
+
+// Load order summary with total including GST + delivery
+window.onload = () => {
+  const items = JSON.parse(localStorage.getItem("checkoutItems")) || [];
+  const summaryList = document.getElementById("orderSummary");
+  summaryList.innerHTML = "";
+
+  let subTotal = 0;
+  items.forEach(item => {
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex justify-content-between align-items-center";
+    li.innerHTML = `<span>${item.cakeName} (x${item.quantity})</span>
+                    <span>₹${(item.price * item.quantity).toFixed(2)}</span>`;
+    summaryList.appendChild(li);
+    subTotal += item.price * item.quantity;
+  });
+
+  const total = subTotal * 1.05 + 50; // 5% GST + 50 delivery
+  document.getElementById("totalAmount").innerText = total.toFixed(2);
+  localStorage.setItem("checkoutTotal", total.toFixed(2));
+};
+
+// Place order
+async function makePayment(){
+  if(selectedPayment === ""){
+    showPopup("⚠️ Please select a payment option!", "error");
+    return;
+  }
+
+  const deliveryForm = document.getElementById("deliveryForm");
+  if(!deliveryForm.checkValidity()){
+    showPopup("⚠️ Please fill all delivery details!", "error");
+    return;
+  }
+
+  const city = document.getElementById("city").value.trim().toLowerCase();
+  if(city !== "jalgaon"){
+    showPopup("❌ Sorry! We currently deliver only in Jalgaon.", "error");
+    return;
+  }
+
+  const username = localStorage.getItem("userName") || localStorage.getItem("sessionId") || localStorage.getItem("userEmail");
+  if(!username){
+    showPopup("⚠️ You must be logged in to place an order!", "error");
+    return;
+  }
+
+  const items = JSON.parse(localStorage.getItem("checkoutItems")) || [];
+  const total = parseFloat(localStorage.getItem("checkoutTotal")) || 0;
+
+  if(selectedPayment === "cod"){
+    // COD order
+    try {
+      for(const item of items){
+        const orderData = {
+          name: item.cakeName,
+          quantity: item.quantity,
+          total: item.price * item.quantity,
+          status: "Pending",
+          username: username,
+          paymentMethod: "Cash on Delivery",
+          customerName: document.getElementById("fullName").value,
+          addressLine: document.getElementById("address").value,
+          city: document.getElementById("city").value,
+          state: document.getElementById("state").value,
+          pincode: document.getElementById("pincode").value,
+          phoneNumber: document.getElementById("phone").value,
+          cakeImage: item.imageUrl || "/images/default-cake.jpg"
+        };
+        await fetch("http://localhost:8081/orders/place", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(orderData)
+        });
+      }
+      showPopup("🎉 Order placed successfully!", "success");
+      localStorage.removeItem("checkoutItems");
+      localStorage.removeItem("checkoutTotal");
+      setTimeout(()=> window.location.href="/user/order.html", 2000);
+    } catch(err){
+      showPopup("❌ Error placing order: "+err.message, "error");
+    }
+    return;
+  }
+
+  // Online Payment using Razorpay
+  try {
+    // Step 1: create order on backend
+    const orderRes = await fetch("http://localhost:8081/orders/createOrder", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({amount: total})
+    });
+    const orderData = await orderRes.json();
+
+    // Step 2: Razorpay Checkout
+    const options = {
+      "key": "YOUR_KEY_ID", // Replace with your Razorpay Key ID
+      "amount": orderData.amount,
+      "currency": "INR",
+      "name": "Cake Shop",
+      "description": "Order Payment",
+      "order_id": orderData.id,
+      "handler": async function(response){
+        console.log("Payment Success:", response);
+
+        // Step 3: Place order in backend with paymentMethod = Online Payment
+        for(const item of items){
+          const orderPayload = {
+            name: item.cakeName,
+            quantity: item.quantity,
+            total: item.price * item.quantity,
+            status: "Pending",
+            username: username,
+            paymentMethod: "Online Payment",
+            customerName: document.getElementById("fullName").value,
+            addressLine: document.getElementById("address").value,
+            city: document.getElementById("city").value,
+            state: document.getElementById("state").value,
+            pincode: document.getElementById("pincode").value,
+            phoneNumber: document.getElementById("phone").value,
+            cakeImage: item.imageUrl || "/images/default-cake.jpg"
+          };
+          await fetch("http://localhost:8081/orders/place", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(orderPayload)
+          });
+        }
+
+        showPopup("🎉 Payment successful & order placed!", "success");
+        localStorage.removeItem("checkoutItems");
+        localStorage.removeItem("checkoutTotal");
+        setTimeout(()=> window.location.href="/user/order.html", 2000);
+      },
+      "prefill": {
+        "name": document.getElementById("fullName").value,
+        "email": localStorage.getItem("userEmail"),
+        "contact": document.getElementById("phone").value
+      },
+      "theme": {
+        "color": "#28a745"
+      }
+    };
+    const rzp = new Razorpay(options);
+    rzp.open();
+
+  } catch(err){
+    showPopup("❌ Payment failed: " + err.message, "error");
+  }
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

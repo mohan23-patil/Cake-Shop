@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login & Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link 
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
+    rel="stylesheet"
+  >
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #d5fefd, #fed6e3);
+      min-height: 100vh;
+    }
+    .navbar-nav .nav-link:hover {
+      font-size: 1.2rem;
+      transition: font-size 0.3s ease;
+    }
+    .auth-box {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 400px;
+    }
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: #007bff;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+    .form-title {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+     .footer {
+            background: linear-gradient(135deg, #d5fefd, #fed6e3);
+            color: black;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 13vh;
+        }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg" style="background: linear-gradient(135deg, #d5fefd, #fed6e3);">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold fs-3 text-danger">🎂 Cake_Shop</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+  </nav>
+
+  <div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="auth-box">
+      <h2 class="form-title" id="formTitle">Admin Login</h2>
+
+      <!-- Login Form -->
+      <form id="loginForm" style="background: #e0e5ec; border-radius: 20px; padding: 25px;">
+        <div class="mb-3">
+          <label class="form-label fw-bold"><i class="fa-solid fa-user text-primary"></i> Username</label>
+          <input type="text" class="form-control" id="loginUsername" required placeholder="Username" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold"><i class="fa-solid fa-lock text-primary"></i> Password</label>
+          <input type="password" class="form-control" id="loginPassword" required placeholder="Password" />
+        </div>
+        <button type="submit" class="btn btn-success w-100">Login</button>
+        <button type="button" class="toggle-btn fw-bold mt-3" onclick="toggleForm()">Don't have an account? Register</button>
+      </form>
+
+      <!-- Registration Form -->
+      <form id="registerForm" style="display: none; background: #e0e5ec; border-radius: 20px; padding: 25px;">
+        <div class="mb-3">
+          <label class="form-label fw-bold"><i class="fa-solid fa-user text-primary"></i> Username</label>
+          <input type="text" class="form-control" id="regUsername" required placeholder="Username" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold"><i class="fa-solid fa-lock text-primary"></i> Password</label>
+          <input type="password" class="form-control" id="regPassword" required placeholder="Password" />
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+        <button type="button" class="toggle-btn fw-bold mt-3" onclick="toggleForm()">Already have an account? Login</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="footer fw-bold">
+    &copy; 2025 Cake Shop. All rights reserved.
+  </div>
+
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const formTitle = document.getElementById("formTitle");
+
+    function toggleForm() {
+      if (loginForm.style.display !== "none") {
+        loginForm.style.display = "none";
+        registerForm.style.display = "block";
+        formTitle.textContent = "Admin Registration";
+      } else {
+        loginForm.style.display = "block";
+        registerForm.style.display = "none";
+        formTitle.textContent = "Admin Login";
+      }
+    }
+
+    const BASE_URL = "http://localhost:8081/admin/auth";
+
+    // Login
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const userName = document.getElementById("loginUsername").value;
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+        const res = await fetch(`${BASE_URL}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userName, password })
+        });
+
+        if (res.ok) {
+          Swal.fire({ icon: 'success', title: 'Login Successful!', timer: 1500, showConfirmButton: false });
+          localStorage.setItem("adminLoggedIn", "true");
+          setTimeout(() => window.location.href = "/admin/adminHome.html", 1500);
+        } else {
+          const errorText = await res.text();
+          Swal.fire({ icon: 'error', title: errorText });
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire({ icon: 'error', title: 'Server Error!' });
+      }
+    });
+
+    // Register
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const userName = document.getElementById("regUsername").value;
+      const password = document.getElementById("regPassword").value;
+
+      try {
+        const res = await fetch(`${BASE_URL}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userName, password })
+        });
+
+        if (res.ok) {
+          Swal.fire({ icon: 'success', title: 'Registration Successful! You can now login.', timer: 1500, showConfirmButton: false });
+          toggleForm();
+        } else {
+          const errorText = await res.text();
+          Swal.fire({ icon: 'error', title: errorText });
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire({ icon: 'error', title: 'Server Error!' });
+      }
+    });
+  </script>
+</body>
+</html>

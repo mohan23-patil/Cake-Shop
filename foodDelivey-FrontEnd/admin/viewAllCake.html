@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All Cakes - Cake Shop Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #d5fefd, #fed6e3);
+      min-height: 100vh;
+    }
+    /* 🔒 Center Popup */
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #ff6f61;
+      color: white;
+      padding: 20px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      font-weight: bold;
+      font-size: 1.2rem;
+      text-align: center;
+      display: none;
+      z-index: 9999;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -40%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+    .navbar-nav .nav-link:hover {
+      font-size: 1.2rem;
+      transition: font-size 0.3s ease;
+    }
+    .cake-card {
+      border-radius: 20px;
+      background: #e0e5ec;
+      box-shadow: 10px 10px 20px #babecc, -10px -10px 20px #ffffff;
+      transition: all 0.3s ease;
+      height: 100%;
+      padding: 10px;
+    }
+    .cake-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 5px 5px 15px #babecc, -5px -5px 15px #ffffff;
+    }
+    .cake-img {
+      height: 180px;
+      object-fit: cover;
+      border-radius: 15px;
+      box-shadow: inset 2px 2px 6px #babecc, inset -2px -2px 6px #ffffff;
+    }
+    .card-body { padding: 15px; }
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #ff6f61;
+    }
+    .card-text { font-size: 0.9rem; }
+    .footer {
+      background: linear-gradient(135deg, #d5fefd, #fed6e3);
+      color: black;
+      padding: 20px 0;
+      text-align: center;
+      margin-top: 40px;
+    }
+    .read-more-btn {
+      color: #ff6f61;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- 🔒 Popup -->
+  <div id="loginPopup" class="popup">⚠ Please login first, then you can access this page.</div>
+
+  <!-- 🔒 Admin Login Check -->
+  <script>
+    const isAdminLoggedIn = localStorage.getItem("adminLoggedIn");
+    if (!isAdminLoggedIn) {
+      const popup = document.getElementById("loginPopup");
+      popup.style.display = "block";
+
+      setTimeout(() => {
+        popup.style.display = "none";
+        window.location.href = "/admin/registration.html";
+      }, 3000); // 3 sec baad redirect
+    }
+  </script>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg" style="background: linear-gradient(135deg, #d5fefd, #fed6e3);">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold fs-3 text-danger">🎂 Cake_Shop Admin</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link fw-bold" href="/admin/adminHome.html"><i class="fa-solid fa-house"></i> Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-bold text-danger" href="/admin/viewAllCake.html"><i class="fa-solid fa-cake-candles"></i> Cakes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-bold" href="/admin/Order.html"><i class="fa-solid fa-truck"></i> Orders</a>
+          </li>
+          <li class="nav-item">
+            <button class="btn btn-danger btn-sm ms-3" onclick="logout()">Logout</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Cakes Section -->
+  <div class="container my-5">
+    <h1 class="text-center mb-4">All Cakes</h1>
+    <div class="row" id="cakesContainer"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer fw-bold">&copy; 2025 Cake Shop. All rights reserved.</div>
+
+  <script>
+    function logout(){
+      localStorage.removeItem("adminLoggedIn");
+      window.location.href = "/admin/registration.html";
+    }
+
+    const apiBaseUrl = "http://localhost:8081/admin"; 
+    const imageBaseUrl = "http://localhost:8081/uploads/"; 
+
+    async function fetchAndDisplayCakes() {
+      try {
+        const res = await fetch(apiBaseUrl + "/getAll");
+        if (!res.ok) throw new Error("Failed to fetch cakes");
+
+        const cakes = await res.json();
+        const container = document.getElementById("cakesContainer");
+        container.innerHTML = "";
+
+        cakes.forEach((cake) => {
+          const card = document.createElement("div");
+          card.className = "col-md-4 mb-4";
+
+          const shortDesc =
+            cake.description.length > 100
+              ? cake.description.substring(0, 100) + "..."
+              : cake.description;
+
+          card.innerHTML = `
+            <div class="card cake-card shadow-sm">
+              <img src="${imageBaseUrl}${cake.image}" class="card-img-top cake-img" alt="${cake.name}" />
+              <div class="card-body">
+                <h5 class="card-title">${cake.name}</h5>
+                <p class="card-text description" data-full="${cake.description}">
+                  ${shortDesc} <span class="read-more-btn">Read More</span>
+                </p>
+                <p class="card-text fw-bold">$${cake.price.toFixed(2)}</p>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        setupReadMore();
+      } catch (err) {
+        console.error(err);
+        alert("Error loading cakes");
+      }
+    }
+
+    function setupReadMore() {
+      const readMoreBtns = document.querySelectorAll(".read-more-btn");
+      readMoreBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const para = btn.parentElement;
+          const fullText = para.getAttribute("data-full");
+
+          if (btn.innerText === "Read More") {
+            para.innerHTML = `${fullText} <span class="read-more-btn">Read Less</span>`;
+          } else {
+            const shortText = fullText.substring(0, 100) + "...";
+            para.innerHTML = `${shortText} <span class="read-more-btn">Read More</span>`;
+          }
+          setupReadMore();
+        });
+      });
+    }
+
+    fetchAndDisplayCakes();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

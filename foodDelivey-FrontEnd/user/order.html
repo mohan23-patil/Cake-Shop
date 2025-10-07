@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Orders - Cake Shop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  body {
+    background: linear-gradient(135deg, #fff1eb, #ace0f9);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .navbar-nav .nav-link:hover { font-size: 1.1rem; transition: font-size 0.3s ease; }
+  .order-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+  }
+  .order-card:hover { transform: scale(1.02); }
+  .cake-img { width: 120px; height: 100px; object-fit: cover; border-radius: 8px; }
+  .badge-status { font-size: 0.9rem; padding: 6px 12px; }
+  .btn-cancel { margin-top: 10px; }
+  .footer-section {
+    background: linear-gradient(135deg, #d5fefd, #fed6e3);
+    text-align: center;
+    padding: 20px 0;
+    margin-top: auto;
+    color: black;
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg" style="background: linear-gradient(135deg, #d5fefd, #fed6e3);">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold fs-3 text-danger">🎂 Cake_Shop</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/userHome.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/viewAllCake.html"><i class="fa-solid fa-cake-candles"></i> Cakes</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/Cart.html"><i class="fa-solid fa-cart-shopping"></i> Cart</a></li>
+        <li class="nav-item"><a class="nav-link text-danger fw-bold active" href="#"><i class="fa-solid fa-truck"></i> Orders</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/userDetails.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container my-4">
+  <h2 class="text-center mb-4">My Orders</h2>
+  <div id="orderContainer"></div>
+</div>
+
+<footer class="footer-section text-dark">
+  <div class="container text-center">
+    <p class="fw-bold mb-0">© 2025 Cake Shop. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+const username = localStorage.getItem("userName") 
+                 || localStorage.getItem("sessionId") 
+                 || localStorage.getItem("userEmail");
+const orderContainer = document.getElementById("orderContainer");
+const BACKEND_URL = "http://localhost:8081"; // backend URL
+
+async function loadOrders() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/orders/user/${encodeURIComponent(username)}`);
+        if (!response.ok) throw new Error("Failed to fetch orders");
+
+        const orders = await response.json();
+        const activeOrders = orders.filter(order => order.status.toLowerCase() !== 'cancelled');
+
+        if (activeOrders.length === 0) {
+            orderContainer.innerHTML = `<p class="text-center fw-bold">No active orders!</p>`;
+            return;
+        }
+
+        orderContainer.innerHTML = "";
+
+        activeOrders.forEach(order => {
+            const card = document.createElement("div");
+            card.className = "order-card row align-items-center";
+            card.id = `order-${order.id}`;
+
+            const cakeImageUrl = order.cakeImage
+                ? `${BACKEND_URL}/uploads/${encodeURIComponent(order.cakeImage.split('\\').pop().split('/').pop())}`
+                : `${BACKEND_URL}/uploads/default-cake.jpg`;
+
+            card.innerHTML = `
+                <div class="col-md-3 text-center">
+                    <img src="${cakeImageUrl}" class="cake-img" alt="${order.name}">
+                </div>
+                <div class="col-md-3">
+                    <h5>${order.name}</h5>
+                    <p class="mb-1"><strong>Customer:</strong> ${order.userName || order.customerName || 'N/A'}</p>
+                    <p class="mb-1">Quantity: ${order.quantity}</p>
+                    <p class="mb-1">Price: ₹${order.total}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Status:</strong> 
+                        <span class="badge ${getStatusBadge(order.status)} badge-status">${order.status}</span>
+                    </p>
+                    <p class="mb-1"><strong>Date:</strong> ${order.date}</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="mb-1"><strong>Delivery:</strong> ${order.addressLine}, ${order.city}, ${order.state} - ${order.pincode}</p>
+                    <p class="mb-1"><strong>Phone:</strong> ${order.phoneNumber}</p>
+                    <button class="btn btn-sm btn-danger btn-cancel" onclick="cancelOrder(${order.id})">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            orderContainer.appendChild(card);
+        });
+    } catch(err) {
+        console.error(err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'Failed to load orders!',
+        });
+    }
+}
+
+async function cancelOrder(orderId){
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You want to cancel this order!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, cancel it!',
+        cancelButtonText: 'No'
+    });
+
+    if(result.isConfirmed){
+        try{
+            const response = await fetch(`${BACKEND_URL}/orders/cancel/${orderId}`, { method: "PUT" });
+            if(!response.ok) throw new Error("Failed to cancel order");
+
+            const card = document.getElementById(`order-${orderId}`);
+            if(card) card.remove();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Cancelled!',
+                text: 'Order has been cancelled successfully.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } catch(err){
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: err.message
+            });
+        }
+    }
+}
+
+function getStatusBadge(status){
+    switch(status.toLowerCase()){
+        case "pending": return "bg-warning text-dark";
+        case "accepted": return "bg-primary text-white";
+        case "shipped": return "bg-info text-white";
+        case "delivered": return "bg-success text-white";
+        case "cancelled": return "bg-danger text-white";
+        default: return "bg-secondary text-white";
+    }
+}
+
+// Load orders when page opens
+loadOrders();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

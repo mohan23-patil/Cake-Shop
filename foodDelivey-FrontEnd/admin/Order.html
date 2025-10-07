@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orders - Cake Shop</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  body {
+    background: linear-gradient(135deg, #d5fefd, #fed6e3);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .navbar-nav .nav-link:hover { font-size: 1.2rem; transition: font-size 0.3s ease; } 
+  .card { border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+  .footer { background: linear-gradient(135deg, #d5fefd, #fed6e3); color: black; padding: 20px 0; text-align: center; margin-top: auto; }
+  .remove-btn { cursor: pointer; color: red; }
+  .badge-payment { padding: 5px 10px; border-radius: 10px; font-weight: bold; }
+  .badge-online { background-color: #d4edda; color: #155724; }
+  .badge-cod { background-color: #fff3cd; color: #856404; }
+  .tr-cancelled { background-color: #f8d7da !important; color: #721c24 !important; font-weight: bold; }
+</style>
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg" style="background: linear-gradient(135deg, #d5fefd, #fed6e3);">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold text-danger fs-3">🎂 Cake_Shop</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarNav" aria-controls="navbarNav"
+            aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link fw-bold text-dark" href="/admin/adminHome.html"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li class="nav-item"><a class="nav-link fw-bold" href="/admin/viewAllCake.html"><i class="fa-solid fa-cake-candles"></i> Cakes</a></li>
+            <li class="nav-item"><a class="nav-link fw-bold text-danger" href="/admin/Order.html"><i class="fa-solid fa-truck"></i> Orders</a></li>
+            <li class="nav-item"><a class="nav-link fw-bold" href="/admin/UserLogin.html"><i class="fa-solid fa-users"></i> Users</a></li>
+            <li class="nav-item"><a class="nav-link text-success fw-bold" href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Orders Section -->
+<div class="container mt-5">
+  <div class="card p-4">
+    <h3 class="mb-4">All Orders</h3>
+    <div class="table-responsive">
+      <table class="table table-striped align-middle text-center">
+        <thead class="table-dark">
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Cake</th>
+            <th>Quantity</th>
+            <th>Total</th>
+            <th>Payment</th> 
+            <th>Status</th>
+            <th>Date</th>
+            <th>Address</th>
+            <th>Phone</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="orderTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="footer fw-bold">&copy; 2025 Cake Shop. All rights reserved.</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const apiBaseUrl = "http://localhost:8081/orders";
+
+// Admin login check
+window.onload = function () {
+  const isAdminLoggedIn = localStorage.getItem("adminLoggedIn");
+  if (!isAdminLoggedIn) {
+    Swal.fire({ icon: 'warning', title: '⚠️ Please login as Admin!', timer: 2000, showConfirmButton: false });
+    setTimeout(() => window.location.href = "/admin/registration.html", 2000);
+  } else {
+    loadOrders();
+    setInterval(loadOrders, 5000); // auto-refresh
+  }
+};
+
+// Load orders
+async function loadOrders() {
+  try {
+    const res = await fetch(`${apiBaseUrl}/all`);
+    if (!res.ok) throw new Error("Failed to fetch orders");
+    const orders = await res.json();
+    const tbody = document.getElementById("orderTableBody");
+
+    orders.forEach((order, index) => {
+      const paymentBadge = order.paymentMethod === "Online Payment" 
+        ? `<span class="badge-payment badge-online">Online</span>` 
+        : `<span class="badge-payment badge-cod">COD</span>`;
+
+      let row = document.getElementById(`order-row-${order.id}`);
+
+      // Maintain current selected value to prevent reset
+      let currentStatus = row ? row.querySelector(".status-select").value : order.status;
+
+      const rowHTML = `
+        <td>${index + 1}</td>
+        <td>${order.customerName}</td>
+        <td>${order.name}</td>
+        <td>${order.quantity}</td>
+        <td>₹${order.total.toFixed(2)}</td>
+        <td>${paymentBadge}</td>
+        <td>
+          <select class="form-select form-select-sm status-select" data-id="${order.id}" ${currentStatus === 'Cancelled' ? 'disabled' : ''}>
+            <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="Packaging" ${currentStatus === 'Packaging' ? 'selected' : ''}>Packaging</option>
+            <option value="Shipping" ${currentStatus === 'Shipping' ? 'selected' : ''}>Shipping</option>
+            <option value="Delivered" ${currentStatus === 'Delivered' ? 'selected' : ''}>Delivered</option>
+            <option value="Cancelled" ${currentStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+          </select>
+        </td>
+        <td>${order.date}</td>
+        <td>${order.addressLine}, ${order.city}, ${order.state} - ${order.pincode}</td>
+        <td>${order.phoneNumber}</td>
+        <td>
+          <button class="btn btn-sm btn-primary update-status-btn" data-id="${order.id}" ${currentStatus === 'Cancelled' ? 'disabled' : ''}>Update</button>
+          <i class="fa-solid fa-trash remove-btn ms-2" onclick="removeOrderFromTable(${order.id})" title="Remove order"></i>
+        </td>
+      `;
+
+      if(row){
+        row.innerHTML = rowHTML;
+        row.className = currentStatus === "Cancelled" ? "tr-cancelled" : "";
+      } else {
+        const tr = document.createElement('tr');
+        tr.id = `order-row-${order.id}`;
+        tr.className = currentStatus === "Cancelled" ? "tr-cancelled" : "";
+        tr.innerHTML = rowHTML;
+        tbody.appendChild(tr);
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire({ icon: 'error', title: '⚠️ Error loading orders' });
+  }
+}
+
+// Update order status
+async function updateOrderStatus(orderId, newStatus){
+  try {
+    const res = await fetch(`${apiBaseUrl}/status/${orderId}?status=${newStatus}`, { method: "PUT" });
+    if(!res.ok) throw new Error("Failed to update status");
+
+    Swal.fire({ icon: 'success', title: '✅ Order status updated!', timer: 1000, showConfirmButton: false });
+
+    const row = document.getElementById(`order-row-${orderId}`);
+    if(row){
+      row.className = newStatus === "Cancelled" ? "tr-cancelled" : "";
+      const select = row.querySelector(".status-select");
+      const btn = row.querySelector(".update-status-btn");
+      if(newStatus === "Cancelled"){
+        select.disabled = true;
+        if(btn) btn.disabled = true;
+      }
+    }
+
+  } catch(err){
+    console.error(err);
+    Swal.fire({ icon: 'error', title: '⚠️ Error updating status' });
+  }
+}
+
+// Remove order
+async function removeOrderFromTable(orderId){
+  try {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "This order will be deleted permanently!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    });
+    if(result.isConfirmed){
+      const res = await fetch(`${apiBaseUrl}/delete/${orderId}`, { method: "DELETE" });
+      if(!res.ok) throw new Error("Failed to delete order");
+
+      const row = document.getElementById(`order-row-${orderId}`);
+      if(row) row.remove();
+
+      Swal.fire({ icon: 'success', title: '✅ Order deleted!', timer: 1000, showConfirmButton: false });
+    }
+  } catch(err){
+    console.error(err);
+    Swal.fire({ icon: 'error', title: '⚠️ Error deleting order' });
+  }
+}
+
+// Event delegation for update buttons
+document.addEventListener("click", function(e){
+  if(e.target.classList.contains("update-status-btn")){
+    const orderId = e.target.getAttribute("data-id");
+    const select = document.querySelector(`.status-select[data-id="${orderId}"]`);
+    const newStatus = select.value;
+    updateOrderStatus(orderId, newStatus);
+  }
+});
+
+// Logout
+function logout(){
+  localStorage.removeItem("adminLoggedIn");
+  Swal.fire({ icon: 'success', title: '🚪 Logged out successfully!', timer: 1000, showConfirmButton: false });
+  setTimeout(() => window.location.href="/admin/registration.html", 1000);
+}
+</script>
+</body>
+</html>

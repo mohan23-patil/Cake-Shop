@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All Cakes – Cake Shop</title>
+
+<!-- Bootstrap & FontAwesome -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+
+<style>
+body { 
+    background: linear-gradient(135deg,#d5fefd,#fed6e3); 
+    min-height:100vh; 
+    font-family:Arial,sans-serif; 
+    display:flex; 
+    flex-direction:column; 
+}
+.navbar-nav .nav-link:hover { font-size:1.1rem; transition:0.3s; }
+
+/* Card styles */
+.card-container { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; }
+.cake-card { background:#fff; border-radius:15px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.1); transition:0.3s; display:flex; flex-direction:column; cursor:pointer; height:auto; }
+.cake-card:hover { transform:translateY(-5px); box-shadow:0 12px 25px rgba(0,0,0,0.2); }
+.cake-card img { width:100%; height:240px; object-fit:cover; border-radius:0; }
+.cake-card-body { padding:15px; display:flex; flex-direction:column; justify-content:space-between; }
+.cake-card h5 { font-size:1.2rem; font-weight:600; margin-bottom:8px; }
+.cake-desc { font-size:0.95rem; color:#555; margin-bottom:10px; }
+.read-more { color:red; font-weight:bold; cursor:pointer; margin-left:5px; }
+
+/* Price & Buttons */
+.price { font-weight:700; font-size:1.1rem; margin-bottom:10px; }
+.btn-group { display:flex; justify-content:space-between; gap:10px; }
+.btn { flex:1; border-radius:50px !important; font-weight:600; font-size:0.85rem; transition:0.3s; padding:7px 12px; }
+.btn:hover { transform:scale(1.05); box-shadow:3px 3px 10px rgba(0,0,0,0.2); }
+
+/* Popup */
+.popup-message { position:absolute; bottom:120%; left:50%; transform:translateX(-50%); background:#28a745; color:white; padding:6px 12px; border-radius:25px; font-weight:600; font-size:0.9rem; display:flex; align-items:center; justify-content:center; white-space:nowrap; opacity:0; pointer-events:none; transition:0.3s; z-index:100; }
+.popup-message.show { opacity:1; transform:translateX(-50%) translateY(-5px); }
+.popup-message i { margin-right:5px; }
+
+/* Footer */
+.footer-section { color:black; text-align:center; padding:20px 0; margin-top:auto; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg,#d5fefd,#fed6e3);">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold text-danger fs-3">🎂 Cake_Shop</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav align-items-center">
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/userHome.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/user/viewAllCake.html"><i class="fa-solid fa-cake-candles"></i> Cakes</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/Cart.html"><i class="fa-solid fa-cart-shopping"></i> Cart</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/order.html"><i class="fa-solid fa-truck"></i> Orders</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/userDetails.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="container my-5">
+  <div class="card-container" id="cakesContainer"></div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer-section text-dark">
+  <p class="fw-bold mb-0">© 2025 Cake Shop. All rights reserved.</p>
+</footer>
+
+<!-- Order Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-4" style="border-radius:15px;">
+      <div class="modal-body text-center">
+        <i class="fa-solid fa-circle-check text-success fa-3x mb-3"></i>
+        <h5 class="text-success fw-bold mb-3">Confirm Your Order</h5>
+        <div id="orderBill" class="mb-3 text-start" style="font-size:1rem;"></div>
+        <div class="d-flex justify-content-center gap-3">
+          <button class="btn btn-success" id="confirmOrderBtn">
+            <i class="fa-solid fa-check"></i> Confirm Order
+          </button>
+          <button class="btn btn-danger" id="cancelOrderBtn">
+            <i class="fa-solid fa-xmark"></i> Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Existing APIs
+const apiUrl = "http://localhost:8081/admin/getAll";
+const cartApi = "http://localhost:8081/cart";
+
+// Get or create sessionId
+function getSessionId() {
+    let sessionId = localStorage.getItem("sessionId");
+    if(!sessionId) { sessionId = "sess-" + Date.now(); localStorage.setItem("sessionId", sessionId); }
+    return sessionId;
+}
+
+// Escape quotes
+function escapeQuotes(str){ return str.replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+// Fetch and display cakes
+async function fetchCakes() {
+    const res = await fetch(apiUrl);
+    const cakes = await res.json();
+    const container = document.getElementById("cakesContainer");
+    container.innerHTML = "";
+    cakes.forEach((cake,index) => {
+        const card = document.createElement("div");
+        card.className = "cake-card";
+        const fullDesc = cake.description;
+        const shortDesc = fullDesc.length > 80 ? fullDesc.slice(0,80) + "..." : fullDesc;
+        const isLong = fullDesc.length > 80;
+
+        card.innerHTML = `
+            <img src="http://localhost:8081/uploads/${cake.image}" alt="${cake.name}">
+            <div class="cake-card-body">
+                <h5>${cake.name}</h5>
+                <p class="cake-desc" data-expanded="false" id="desc-${index}">
+                    ${shortDesc}
+                    ${isLong ? `<span class="read-more" onclick="toggleDesc(${index}, '${escapeQuotes(fullDesc)}')">Read More</span>` : ""}
+                </p>
+                <p class="price">₹${cake.price}</p>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick='addToCart(${JSON.stringify(cake)}, this)'>
+                        <i class="fa-solid fa-cart-shopping"></i> Cart
+                    </button>
+                    <button class="btn btn-danger" onclick='showOrderModal(${JSON.stringify(cake)})'>
+                        <i class="fa-solid fa-truck"></i> Order
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Toggle Read More / Read Less
+function toggleDesc(index, fullText){
+    const descEl = document.getElementById(`desc-${index}`);
+    const expanded = descEl.dataset.expanded === "true";
+    if(expanded){
+        const shortText = fullText.slice(0,80) + "...";
+        descEl.innerHTML = `${shortText} <span class="read-more" onclick="toggleDesc(${index}, '${escapeQuotes(fullText)}')">Read More</span>`;
+        descEl.dataset.expanded = "false";
+    } else {
+        descEl.innerHTML = `${fullText} <span class="read-more" onclick="toggleDesc(${index}, '${escapeQuotes(fullText)}')">Read Less</span>`;
+        descEl.dataset.expanded = "true";
+    }
+}
+
+// Add to cart
+async function addToCart(cake, btn) {
+    const sessionId = getSessionId();
+    const cartItem = { cakeName: cake.name, quantity: 1, price: cake.price, imageUrl:`http://localhost:8081/uploads/${cake.image}`, sessionId };
+    const res = await fetch(`${cartApi}/add`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(cartItem) });
+    if(res.ok) showPopup(btn, "Cake added to cart!");
+    else showPopup(btn, "Failed to add");
+}
+
+// Popup for Cart
+function showPopup(button, message){
+    const popup = document.createElement("div");
+    popup.className = "popup-message show";
+    popup.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${message}`;
+    button.parentElement.appendChild(popup);
+    setTimeout(()=>{ popup.remove(); },1500);
+}
+
+// --- FIXED ORDER MODAL FUNCTION ---
+function showOrderModal(cake){
+    const delivery = 50;
+    const tax = cake.price * 0.05;
+    const total = cake.price + delivery + tax;
+
+    // Save order with imageUrl for checkout
+    const orderData = [{
+        cakeName: cake.name,
+        quantity: 1,
+        price: cake.price,
+        imageUrl: `http://localhost:8081/uploads/${cake.image}` // ✅ Image included
+    }];
+    localStorage.setItem("checkoutItems", JSON.stringify(orderData));
+    localStorage.setItem("checkoutTotal", total.toFixed(2));
+
+    // Prepare bill HTML
+    const billHtml = `
+        <i class="fa-solid fa-cake-candles text-dark"></i> <strong>Cake:</strong> <strong>${cake.name}</strong> <br>
+        <i class="fa-solid fa-money-bill-wave text-dark"></i> <strong>Price:</strong> <strong>₹${cake.price.toFixed(2)}</strong> <br>
+        <i class="fa-solid fa-truck text-dark"></i> <strong>Delivery:</strong> <strong>₹${delivery.toFixed(2)}</strong> <br>
+        <i class="fa-solid fa-percent text-dark"></i> <strong>Tax (5%):</strong> <strong>₹${tax.toFixed(2)}</strong> <br>
+        <hr>
+        <strong><i class="fa-solid fa-check-circle text-dark"></i> Total: ₹${total.toFixed(2)}</strong>
+    `;
+    document.getElementById("orderBill").innerHTML = billHtml;
+
+    // Show modal
+    const modalEl = new bootstrap.Modal(document.getElementById("orderModal"));
+    modalEl.show();
+
+    // Confirm button
+    document.getElementById("confirmOrderBtn").onclick = () => {
+        modalEl.hide();
+        window.location.href = "/user/checkout.html"; // Checkout page
+    };
+
+    // Cancel button
+    document.getElementById("cancelOrderBtn").onclick = () => modalEl.hide();
+}
+
+// Initial fetch
+fetchCakes();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

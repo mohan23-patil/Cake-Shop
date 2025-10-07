@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cart - Cake Shop</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+
+<style>
+body { 
+  background: linear-gradient(135deg,#fff1eb,#ace0f9); 
+  min-height:100vh; 
+  display:flex; 
+  flex-direction:column; 
+}
+.navbar-nav .nav-link:hover { font-size:1.2rem; transition:0.3s; }
+
+/* Toast Center Message */
+.toast-notify { 
+  position: fixed; 
+  top: 50%; left: 50%; 
+  transform:translate(-50%,-50%); 
+  background: #dc3545; 
+  color: #fff; 
+  padding: 18px 30px; 
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25); 
+  opacity: 0; 
+  pointer-events: none; 
+  transition: 0.4s; 
+  z-index: 9999; 
+  font-weight:600; 
+  font-size:1.1rem;
+  text-align:center;
+}
+.toast-notify.show { opacity: 1; pointer-events: auto; }
+
+/* Cart Styles */
+.cart-container { display:flex; flex-direction:column; gap:20px; }
+@media(min-width:768px){ .cart-container { flex-direction:row; gap:30px; } }
+.cart-items { flex:2; }
+.cart-item { background:#fff; border-radius:10px; padding:10px; margin-bottom:14px; display:flex; flex-direction:column; gap:10px; box-shadow:4px 4px 12px rgba(0,0,0,0.08); }
+.cart-item:hover { transform:scale(1.02); box-shadow:8px 8px 18px rgba(0,0,0,0.2); }
+@media(min-width:576px){ .cart-item{ flex-direction:row; align-items:center; justify-content:space-between;} }
+.cart-img{ width:60px; height:60px; border-radius:6px; object-fit:cover; }
+@media(min-width:576px){ .cart-img{ width:75px; height:75px;} }
+.cart-details{ flex:1; font-size:0.85rem; }
+.cart-title{ font-size:0.95rem; font-weight:600; margin-bottom:2px; }
+.cart-price{ font-size:0.85rem; font-weight:600; color:#28a745; margin-bottom:5px; }
+.qty-control{ display:flex; align-items:center; gap:5px; margin-bottom:5px; }
+.qty-btn{ width:28px; height:28px; border:none; border-radius:4px; background:#f3f3f3; font-weight:700; cursor:pointer; }
+.qty-number{ width:30px; text-align:center; font-weight:600; }
+.remove-btn{ font-size:0.8rem; padding:5px 10px; align-self:flex-end; cursor:pointer; }
+@media(max-width:575.98px){ .remove-btn{ align-self:stretch;} }
+
+/* Bill Summary */
+.bill-summary { flex:1; background:#fff; border-radius:12px; padding:20px; height:max-content; box-shadow:4px 4px 12px rgba(0,0,0,0.1); }
+.bill-summary h5 { font-weight:600; margin-bottom:20px; font-size:1.3rem; text-align:center; }
+.bill-summary p { font-weight:500; font-size:1rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.bill-summary p .label { display:flex; align-items:center; gap:2px; }
+.bill-summary .total { font-size:1.3rem; font-weight:700; margin-top:15px; }
+.bill-summary button { width:100%; border-radius:50px; font-weight:600; margin-top:20px; }
+
+.footer-section{ background: linear-gradient(135deg, #d5fefd, #fed6e3); color:black; text-align:center; padding:20px 0; margin-top:auto; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg" style="background:linear-gradient(135deg,#fff1eb,#ace0f9);">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold fs-3 text-danger">🎂 Cake Shop</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav align-items-center">
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/userHome.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/viewAllCake.html"><i class="fa-solid fa-cake-candles"></i> Cakes</a></li>
+        <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/user/Cart.html"><i class="fa-solid fa-cart-shopping"></i> Cart</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/order.html"><i class="fa-solid fa-truck"></i> Orders</a></li>
+        <li class="nav-item"><a class="nav-link text-dark fw-bold" href="/user/userDetails.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- CART + BILL -->
+<div class="container my-4 cart-container" id="cartPage" style="display:none;">
+  <div class="cart-items" id="cartItems"></div>
+  <div class="bill-summary">
+    <h5><i class="fa-solid fa-file-invoice-dollar"></i> Bill Summary</h5>
+    <p><span class="label"><i class="fa-solid fa-money-bill-wave text-success"></i> Subtotal</span><span id="subtotal">₹0</span></p>
+    <p><span class="label"><i class="fa-solid fa-percent text-warning"></i> Tax (5%)</span><span id="tax">₹0</span></p>
+    <p><span class="label"><i class="fa-solid fa-truck text-primary"></i> Delivery</span><span id="delivery">₹50</span></p>
+    <p class="total"><span class="label"><i class="fa-solid fa-hand-holding-dollar"></i> Total</span><span id="finalTotal">₹0</span></p>
+    <button class="btn btn-success" onclick="placeOrder()"><i class="fa-solid fa-cart-shopping me-2"></i>Place Order</button>
+  </div>
+</div>
+
+<!-- Center Toast -->
+<div class="toast-notify" id="toast">Message</div>
+
+<footer class="footer-section">
+  <p class="fw-bold mb-0">© 2025 Cake Shop. All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const cartApi = "http://localhost:8081/cart";
+const deliveryCharges = 50;
+const user = JSON.parse(localStorage.getItem('loggedUser'));
+
+// Show toast
+function showToast(msg, redirect=false, redirectUrl="") {
+  const toast = document.getElementById("toast");
+  toast.innerText = msg;
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+    if (redirect && redirectUrl) window.location.href = redirectUrl;
+  }, 2500);
+}
+
+// Redirect to login
+function redirectToLogin() {
+  document.getElementById("cartPage").style.display = "none";
+  showToast("Please login first!", true, "/user/userRegistration.html");
+}
+
+// Check login & load cart
+window.onload = async function() {
+  const sessionId = localStorage.getItem("sessionId");
+  if (!user || !sessionId) {
+    redirectToLogin();
+  } else {
+    document.getElementById("cartPage").style.display = "flex";
+    await loadCart();
+  }
+};
+
+// Load cart items from backend
+async function loadCart() {
+  try {
+    const sessionId = localStorage.getItem("sessionId");
+    let res = await fetch(`${cartApi}/${sessionId}`);
+    let cartItems = await res.json();
+
+    if (!Array.isArray(cartItems)) cartItems = [];
+
+    if (cartItems.length === 0) {
+      showToast("Cart is empty!", true, "/user/viewAllCake.html");
+      return;
+    }
+
+    localStorage.setItem("checkoutItems", JSON.stringify(cartItems));
+    renderCart(cartItems);
+    updateBill(cartItems);
+  } catch (err) {
+    console.error(err);
+    showToast("Error loading cart!", true, "/user/viewAllCake.html");
+  }
+}
+
+// Render cart items
+function renderCart(cartItems) {
+  const container = document.getElementById("cartItems");
+  container.innerHTML = "";
+  cartItems.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "cart-item";
+    div.innerHTML = `
+      <img src="${item.imageUrl}" class="cart-img">
+      <div class="cart-details">
+        <div class="cart-title">${item.cakeName}</div>
+        <div class="cart-price">₹${item.price}</div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty(${item.id}, -1)">-</button>
+          <div class="qty-number" id="qty-${item.id}">${item.quantity}</div>
+          <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+        </div>
+      </div>
+      <button class="btn btn-danger btn-sm remove-btn" onclick="removeItem(${item.id})">Remove</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// Update bill
+function updateBill(cartItems) {
+  let subtotal = 0;
+  cartItems.forEach(item => subtotal += item.price * item.quantity);
+  let tax = subtotal * 0.05;
+  let total = subtotal + tax + (cartItems.length > 0 ? deliveryCharges : 0);
+
+  document.getElementById("subtotal").innerText = `₹${subtotal.toFixed(2)}`;
+  document.getElementById("tax").innerText = `₹${tax.toFixed(2)}`;
+  document.getElementById("delivery").innerText = `${cartItems.length > 0 ? deliveryCharges : 0}`;
+  document.getElementById("finalTotal").innerText = `₹${total.toFixed(2)}`;
+}
+
+// Change quantity
+function changeQty(itemId, delta) {
+  let cartItems = JSON.parse(localStorage.getItem("checkoutItems")) || [];
+  const item = cartItems.find(c => c.id === itemId);
+  if (!item) return;
+  item.quantity += delta;
+  if (item.quantity < 1) item.quantity = 1;
+  localStorage.setItem("checkoutItems", JSON.stringify(cartItems));
+  document.getElementById(`qty-${itemId}`).innerText = item.quantity;
+  updateBill(cartItems);
+}
+
+// Remove item from backend and local
+async function removeItem(itemId) {
+  try {
+    const res = await fetch(`${cartApi}/remove/${itemId}`, { method: "DELETE" });
+    await res.text(); // backend message
+
+    // Update localStorage
+    let cartItems = JSON.parse(localStorage.getItem("checkoutItems")) || [];
+    cartItems = cartItems.filter(c => c.id !== itemId);
+
+    if (cartItems.length === 0) {
+      localStorage.removeItem("checkoutItems");
+      showToast("Cart is empty!", true, "/user/viewAllCake.html");
+      return;
+    }
+
+    localStorage.setItem("checkoutItems", JSON.stringify(cartItems));
+    renderCart(cartItems);
+    updateBill(cartItems);
+    showToast("Item removed from cart!");
+  } catch (err) {
+    console.error(err);
+    showToast("Error removing item!");
+  }
+}
+
+// Place order
+function placeOrder() {
+  const cartItems = JSON.parse(localStorage.getItem("checkoutItems")) || [];
+  if (cartItems.length === 0) {
+    showToast("Cart is empty!", true, "/user/viewAllCake.html");
+    return;
+  }
+  window.location.href = "/user/checkout.html";
+}
+</script>
+</body>
+</html>

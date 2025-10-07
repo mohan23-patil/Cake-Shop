@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cake Shop Admin Panel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body { background: linear-gradient(135deg, #d5fefd, #fed6e3); min-height: 100vh; }
+    .navbar-nav .nav-link:hover { font-size: 1.2rem; transition: font-size 0.3s ease; }
+    .cake-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; transition: transform 0.2s; }
+    .cake-img:hover { transform: scale(1.1); }
+    .card-header { background-color: #ff6f61; color: white; }
+    .btn-action:hover { transform: scale(1.05); }
+    .footer { background-color: #343a40; color: white; padding: 20px 0; text-align: center; margin-top: 40px; }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg" style="background: linear-gradient(135deg, #d5fefd, #fed6e3);">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-danger fs-3">🎂 Cake_Shop</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+              data-bs-target="#navbarNav" aria-controls="navbarNav"
+              aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link fw-bold text-danger" href="/admin/adminHome.html">
+              <i class="fa-solid fa-house"></i> Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-bold" href="/admin/viewAllCake.html">
+              <i class="fa-solid fa-cake-candles"></i> Cakes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-bold" href="/orders">
+              <i class="fa-solid fa-truck"></i> Orders
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container mt-5">
+    <h2 class="mb-4">Manage Cakes</h2>
+
+    <!-- Add Cake Form -->
+    <div class="card shadow mb-4">
+      <div class="card-header">Add New Cake</div>
+      <div class="card-body">
+        <form id="addCakeForm" enctype="multipart/form-data">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="cakeName" class="form-label">Name</label>
+              <input type="text" id="cakeName" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label for="cakePrice" class="form-label">Price</label>
+              <input type="number" id="cakePrice" class="form-control" step="0.01" required>
+            </div>
+            <div class="col-12">
+              <label for="cakeDescription" class="form-label">Description</label>
+              <textarea id="cakeDescription" class="form-control" rows="2" required></textarea>
+            </div>
+            <div class="col-12">
+              <label for="cakeImage" class="form-label">Image</label>
+              <input type="file" id="cakeImage" class="form-control" accept="image/*" required>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-success mt-3"><i class="fa-solid fa-plus me-1"></i>Add Cake</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Cakes Table -->
+    <div class="card shadow">
+      <div class="card-header">All Cakes</div>
+      <div class="card-body">
+        <table class="table table-bordered text-center align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Price</th>
+              <th>Image</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="cakesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Cake Modal -->
+  <div class="modal fade" id="editCakeModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="editCakeForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Cake</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editCakeId">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" id="editCakeName" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea id="editCakeDescription" class="form-control" rows="2" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Price</label>
+            <input type="number" id="editCakePrice" class="form-control" step="0.01" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Current Image</label><br>
+            <img id="currentCakeImage" class="cake-img mb-2"><br>
+            <small class="text-muted">Image cannot be changed from here</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Update Cake</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="footer">&copy; 2025 Cake Shop. All rights reserved.</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const apiBase = 'http://localhost:8081/admin';
+    const imgBase = 'http://localhost:8081/uploads/';
+
+    async function loadCakes() {
+      const res = await fetch(apiBase + '/getAll');
+      const cakes = await res.json();
+      const tbody = document.getElementById('cakesTableBody');
+      tbody.innerHTML = '';
+      cakes.forEach(cake => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${cake.id}</td>
+            <td>${cake.name}</td>
+            <td>${cake.description}</td>
+            <td>${cake.price}</td>
+            <td><img src="${imgBase + cake.image}" class="cake-img"></td>
+            <td>
+              <button class="btn btn-warning btn-sm" onclick="openEditModal(${cake.id})"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn btn-danger btn-sm" onclick="deleteCake(${cake.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    loadCakes();
+
+    // Add Cake
+    document.getElementById('addCakeForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append('name', cakeName.value);
+      formData.append('description', cakeDescription.value);
+      formData.append('price', cakePrice.value);
+      formData.append('image', cakeImage.files[0]);
+
+      const res = await fetch(apiBase + '/upload', { method: 'POST', body: formData });
+      if (res.ok) {
+        Swal.fire({ icon: 'success', title: 'Cake added!', showConfirmButton: false, timer: 1500 });
+        loadCakes();
+        e.target.reset();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Failed to add cake' });
+      }
+    });
+
+    // Edit Cake
+    async function openEditModal(id) {
+      const res = await fetch(apiBase + '/get/' + id);
+      const cake = await res.json();
+      editCakeId.value = cake.id;
+      editCakeName.value = cake.name;
+      editCakeDescription.value = cake.description;
+      editCakePrice.value = cake.price;
+      currentCakeImage.src = imgBase + cake.image;
+      new bootstrap.Modal(editCakeModal).show();
+    }
+
+    // Update Cake (JSON only)
+    editCakeForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = editCakeId.value;
+      const cakeData = {
+        name: editCakeName.value,
+        description: editCakeDescription.value,
+        price: parseFloat(editCakePrice.value)
+      };
+      const res = await fetch(`${apiBase}/update/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cakeData)
+      });
+      if (res.ok) {
+        Swal.fire({ icon: 'success', title: 'Cake updated!', showConfirmButton: false, timer: 1500 });
+        loadCakes();
+        bootstrap.Modal.getInstance(editCakeModal).hide();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Update failed' });
+      }
+    });
+
+    // Delete Cake
+    async function deleteCake(id) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "This will permanently delete the cake!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const res = await fetch(apiBase + '/delete/' + id, { method: 'DELETE' });
+          if (res.ok) {
+            Swal.fire({ icon: 'success', title: 'Deleted!', showConfirmButton: false, timer: 1500 });
+            loadCakes();
+          } else {
+            Swal.fire({ icon: 'error', title: 'Delete failed' });
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
